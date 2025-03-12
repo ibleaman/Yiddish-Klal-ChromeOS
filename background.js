@@ -100,3 +100,25 @@ function(engineID, keyData) {
 
   return false
 });
+
+// In service workers, we need to keep the service worker alive
+// This ensures the IME functions continuously
+self.addEventListener('install', (event) => {
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(clients.claim());
+});
+
+// For IME extensions, we need to keep the service worker alive
+// This is considered an "exceptional case" as mentioned in the migration guide
+let heartbeatInterval;
+
+async function runHeartbeat() {
+  // A simple API call to keep the service worker active
+  chrome.runtime.getPlatformInfo(() => {});
+}
+
+// Start the heartbeat immediately since an IME needs to be always available
+heartbeatInterval = setInterval(runHeartbeat, 20 * 1000); // every 20 seconds
